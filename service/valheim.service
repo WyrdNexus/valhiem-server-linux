@@ -1,0 +1,21 @@
+[Unit]
+Description=Valheim Server
+Wants=network-online.target
+After=syslog.target network.target nss-lookup.target network-online.target
+StartLimitIntervalSec=60s
+StartLimitBurst=3
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=5
+User=steam
+Group=steam
+ExecStartPre=/usr/games/steamcmd +login anonymous +force_install_dir /home/steam/valheimserver +app_update 896660 validate +exit
+EnvironmentFile=config.env
+ExecStart=/home/steam/valheim-start.sh $WORLD $PASSWORD $PORT
+ExecReload=/bin/kill -s HUP \$MAINPID
+ExecStop=/bin/kill -s INT \$MAINPID
+WorkingDirectory=/home/steam/valheimserver
+LimitNOFILE=100000
+[Install]
+WantedBy=multi-user.target
