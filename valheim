@@ -3,30 +3,113 @@
 err() {
   local color="\033[0;31m" #red
   local nc="\033[0m"
-  echo "$color" "Valheim Script Error: $* $nc" >>/dev/stderr
+  echo -e "$color" "Valheim Script Error: $* $nc" >>/dev/stderr
 }
 
 info() {
   local color="\033[0;32m" #green
   local nc="\033[0m"
-  echo "$color" "$* $nc"
+  echo -e "$color" "$* $nc"
+}
+
+keyval() {
+  local color1="\033[0;36m" #cyan
+  local color2="\033[0;32m" #green
+  local nc="\033[0m"
+  echo -e "$color1   $1 $nc - $color2 $2 $nc"
 }
 
 titlebox() {
   local color="\033[0;33m" #yellow
   local nc="\033[0m"
   local s="$*"
-  echo "
+  echo -e "
 __${s//?/_}__
 |$color $s $nc|
 ‾‾${s//?/‾}‾‾
 "
 }
 
-#todo welcome + add to path help
-#todo install
-#todo start/stop/restart
-#todo update
+welcome() {
+  titlebox "Valheim Server Linux"
+  info "Valheim SteamCmd Standalone Ubuntu Server Script"
+  echo "Your user must have sudo."
+  info "available commands:"
+  keyval "install" "Prompted full-auto setup and launch of a server."
+  keyval "install-ni [server-name] [password] [port]" "non-interactive install (for dockery type stuff)."
+  keyval "update" "checks for new version, and updates if one exists."
+  keyval "backup [on|off]" "enable/disable daily/weekly/monthly backups or world-files."
+  keyval "backup log" "show the last 10 entries in the backup log."
+  keyval "backup cd" "move to the backups directory"
+}
+
+install() {
+  info "World and Server name must match."
+  info "To copy a world from elsewhere, you need all 4 files, cannot change the name, and must set the World and Server name to match."
+  info "Password may not be in the world name, and must be at least 5 chars."
+  echo "Note: you will need to ensure correct forwarding rules on firewall/router, so that external requests to 2456 are sent to this machine on 2456.
+  Also, it will be saver to change the default port, and use something like nginx reverse proxy.
+     e.g.: valheim port 2999; nginx reverse proxy 8989:2999; firewall port forwarding 2456:8989."
+
+  local world pass port
+  read -pr "World Name: " world
+  read -pr "Password : " pass
+  read -pr "port [2456]: " port
+
+  install_ni "$world" "$pass" "$port"
+}
+
+install_ni() {
+  { [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; } && {
+    err "valheim-install missing args: server-name password port"
+    return 1
+  }
+
+  printf "WORLD=%s\nPASSWORD=%s\nPORT=%s" "${1}" "${2}" "${3:=2456}" > config.env
+  sudo exec util/valheim-install.sh "${1}" "${2}" "${3:=2456}"
+}
+
+#backups() {
+#  30 11 * * * ~/valheim/valheim-backup-daily.sh
+#  35 11 * * 1 ~/valheim/valheim-backup-weekly.sh
+#  40 11 2 * * ~/valheim/valheim-backup-monthly.sh
+#}
+
+case "${1}" in
+
+  "install")
+    install
+  ;;
+
+  "install-ni")
+    install-ni "${2}" "${3}" "${4}"
+  ;;
+
+  "start" | "stop" | "restart" )
+    sudo systemctl $1 valheim
+  ;;
+
+  "update" )
+    sudo exec util/valheim-update.sh
+  ;;
+
+  "backup" )
+    info "not yet fully implemented"
+    info "add to crontab -e"
+    echo "(correct full path to valheim-server-linux)
+30 11 * * * valheim-server-linux/util/valheim-backup.sh \"daily\"
+35 11 * * 1 valheim-server-linux/util/valheim-backup.sh \"weekly\"
+40 11 2 * * valheim-server-linux/util/valheim-backup.sh \"monthly\"
+"
+  ;;
+
+  *)
+    welcome
+  ;;
+
+esac
+
+#todo add valheim to path
 #todo backup daily|weekly|monthly on|off
 #todo backup log
 #todo backup cd

@@ -2,16 +2,15 @@
 err() {
   local color="\033[0;31m" #red
   local nc="\033[0m"
-  echo "$color" "Valheim Script Error: $* $nc" >>/dev/stderr
+  echo -e "$color" "Valheim Script Error: $* $nc" >>/dev/stderr
 }
 
 info() {
   local color="\033[0;32m" #green
   local nc="\033[0m"
-  echo "$color" "$* $nc"
+  echo -e "$color" "$* $nc"
 }
 
-# todo password min 5 chars & not in server name
 [ -z "$1" ] && {
   err "valheim-start missing args: server-name password port"
   return 1

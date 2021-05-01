@@ -2,20 +2,20 @@
 err() {
   local color="\033[0;31m" #red
   local nc="\033[0m"
-  echo "$color" "Valheim Script Error: $* $nc" >>/dev/stderr
+  echo -e "$color" "Valheim Script Error: $* $nc" >>/dev/stderr
 }
 
 info() {
   local color="\033[0;32m" #green
   local nc="\033[0m"
-  echo "$color" "$* $nc"
+  echo -e "$color" "$* $nc"
 }
 
 titlebox() {
   local color="\033[0;33m" #yellow
   local nc="\033[0m"
   local s="$*"
-  echo "
+  echo -e "
 __${s//?/_}__
 |$color $s $nc|
 ‾‾${s//?/‾}‾‾
@@ -56,8 +56,6 @@ install_service() {
 titlebox "Installing Valheim Server"
 info "Valheim SteamCmd Standalone Linux Server"
 
-# todo install nginx
-# todo dialog set config.env
 install_steamcmd
 install_valheim
 install_service
